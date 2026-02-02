@@ -7,33 +7,71 @@ import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
 import '../bloc/auth_state.dart';
 import '../../../../features/products/presentation/pages/home_screen.dart';
-import 'registration_page.dart';
+import 'login_page.dart';
 
-class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+class RegistrationPage extends StatefulWidget {
+  const RegistrationPage({super.key});
 
   @override
-  State<LoginPage> createState() => _LoginPageState();
+  State<RegistrationPage> createState() => _RegistrationPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _RegistrationPageState extends State<RegistrationPage> {
+  final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   bool _obscurePassword = true;
+  bool _obscureConfirmPassword = true;
+
+  static const _inputDecoration = InputDecoration(
+    hintStyle: TextStyle(color: Color(0xFFB0B0B0), fontSize: 16),
+    filled: true,
+    fillColor: Colors.white,
+    contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+    border: OutlineInputBorder(
+      borderRadius: BorderRadius.all(Radius.circular(12)),
+      borderSide: BorderSide(color: Color(0xFFE0E0E0), width: 1),
+    ),
+    enabledBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.all(Radius.circular(12)),
+      borderSide: BorderSide(color: Color(0xFFE0E0E0), width: 1),
+    ),
+    focusedBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.all(Radius.circular(12)),
+      borderSide: BorderSide(color: Color(0xFF7BB5C9), width: 2),
+    ),
+    errorBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.all(Radius.circular(12)),
+      borderSide: BorderSide(color: Colors.red, width: 1),
+    ),
+    focusedErrorBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.all(Radius.circular(12)),
+      borderSide: BorderSide(color: Colors.red, width: 2),
+    ),
+  );
 
   @override
   void dispose() {
+    _nameController.dispose();
     _phoneController.dispose();
     _passwordController.dispose();
+    _confirmPasswordController.dispose();
     super.dispose();
+  }
+
+  String? _validateName(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return AppLocalizations.of(context).nameHint;
+    }
+    return null;
   }
 
   String? _validatePhoneNumber(String? value) {
     if (value == null || value.isEmpty) {
       return AppLocalizations.of(context).phoneNumberHint;
     }
-    // Basic validation for Uzbek phone format: +998 XX XXX XX XX
     final phoneRegex = RegExp(r'^\+998 \d{2} \d{3} \d{2} \d{2}$');
     if (!phoneRegex.hasMatch(value)) {
       return 'Please enter a valid phone number';
@@ -51,6 +89,16 @@ class _LoginPageState extends State<LoginPage> {
     return null;
   }
 
+  String? _validateConfirmPassword(String? value) {
+    if (value == null || value.isEmpty) {
+      return AppLocalizations.of(context).confirmPasswordHint;
+    }
+    if (value != _passwordController.text) {
+      return 'Passwords do not match';
+    }
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -58,9 +106,10 @@ class _LoginPageState extends State<LoginPage> {
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) {
         state.maybeWhen(
-          authenticated: (user) {
-            Navigator.of(context).pushReplacement(
+          authenticated: (_) {
+            Navigator.of(context).pushAndRemoveUntil(
               MaterialPageRoute(builder: (context) => const HomeScreen()),
+              (route) => false,
             );
           },
           error: (failure) {
@@ -76,6 +125,14 @@ class _LoginPageState extends State<LoginPage> {
       },
       child: Scaffold(
         backgroundColor: Colors.white,
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF2D2D2D)),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+        ),
         body: SafeArea(
           child: SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 24.0),
@@ -84,10 +141,9 @@ class _LoginPageState extends State<LoginPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const SizedBox(height: 40),
-                  // Header
+                  const SizedBox(height: 8),
                   Text(
-                    l10n.loginTitle,
+                    l10n.registerTitle,
                     style: const TextStyle(
                       fontSize: 32,
                       fontWeight: FontWeight.bold,
@@ -97,23 +153,24 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    l10n.loginSubtitle,
+                    l10n.registerSubtitle,
                     style: const TextStyle(
                       fontSize: 16,
                       color: Color(0xFF757575),
                       height: 1.4,
                     ),
                   ),
-                  const SizedBox(height: 40),
-                  // Phone Number Field
-                  Text(
-                    l10n.phoneNumberLabel,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF2D2D2D),
-                    ),
+                  const SizedBox(height: 32),
+                  _buildLabel(l10n.nameLabel),
+                  const SizedBox(height: 8),
+                  TextFormField(
+                    controller: _nameController,
+                    textCapitalization: TextCapitalization.words,
+                    decoration: _inputDecoration.copyWith(hintText: l10n.nameHint),
+                    validator: _validateName,
                   ),
+                  const SizedBox(height: 24),
+                  _buildLabel(l10n.phoneNumberLabel),
                   const SizedBox(height: 8),
                   TextFormField(
                     controller: _phoneController,
@@ -122,78 +179,19 @@ class _LoginPageState extends State<LoginPage> {
                       FilteringTextInputFormatter.digitsOnly,
                       UzbekPhoneNumberFormatter(),
                     ],
-                    decoration: InputDecoration(
+                    decoration: _inputDecoration.copyWith(
                       hintText: l10n.phoneNumberHint,
-                      hintStyle: const TextStyle(
-                        color: Color(0xFFB0B0B0),
-                        fontSize: 16,
-                      ),
-                      filled: true,
-                      fillColor: Colors.white,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(
-                          color: Color(0xFFE0E0E0),
-                          width: 1,
-                        ),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(
-                          color: Color(0xFFE0E0E0),
-                          width: 1,
-                        ),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(
-                          color: Color(0xFF7BB5C9),
-                          width: 2,
-                        ),
-                      ),
-                      errorBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(
-                          color: Colors.red,
-                          width: 1,
-                        ),
-                      ),
-                      focusedErrorBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(
-                          color: Colors.red,
-                          width: 2,
-                        ),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 16,
-                      ),
                     ),
                     validator: _validatePhoneNumber,
                   ),
                   const SizedBox(height: 24),
-                  // Password Field
-                  Text(
-                    l10n.passwordLabel,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF2D2D2D),
-                    ),
-                  ),
+                  _buildLabel(l10n.passwordLabel),
                   const SizedBox(height: 8),
                   TextFormField(
                     controller: _passwordController,
                     obscureText: _obscurePassword,
-                    decoration: InputDecoration(
+                    decoration: _inputDecoration.copyWith(
                       hintText: l10n.passwordHint,
-                      hintStyle: const TextStyle(
-                        color: Color(0xFFB0B0B0),
-                        fontSize: 16,
-                      ),
-                      filled: true,
-                      fillColor: Colors.white,
                       suffixIcon: IconButton(
                         icon: Icon(
                           _obscurePassword
@@ -207,75 +205,40 @@ class _LoginPageState extends State<LoginPage> {
                           });
                         },
                       ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(
-                          color: Color(0xFFE0E0E0),
-                          width: 1,
-                        ),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(
-                          color: Color(0xFFE0E0E0),
-                          width: 1,
-                        ),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(
-                          color: Color(0xFF7BB5C9),
-                          width: 2,
-                        ),
-                      ),
-                      errorBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(
-                          color: Colors.red,
-                          width: 1,
-                        ),
-                      ),
-                      focusedErrorBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(
-                          color: Colors.red,
-                          width: 2,
-                        ),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 16,
-                      ),
                     ),
                     validator: _validatePassword,
                   ),
-                  const SizedBox(height: 12),
-                  // Forgot Password Link
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: TextButton(
-                      onPressed: () {
-                        // TODO: Implement forgot password
-                      },
-                      child: Text(
-                        l10n.forgotPassword,
-                        style: const TextStyle(
-                          color: Color(0xFF7BB5C9),
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
+                  const SizedBox(height: 24),
+                  _buildLabel(l10n.confirmPasswordLabel),
+                  const SizedBox(height: 8),
+                  TextFormField(
+                    controller: _confirmPasswordController,
+                    obscureText: _obscureConfirmPassword,
+                    decoration: _inputDecoration.copyWith(
+                      hintText: l10n.confirmPasswordHint,
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _obscureConfirmPassword
+                              ? Icons.visibility_outlined
+                              : Icons.visibility_off_outlined,
+                          color: const Color(0xFF757575),
                         ),
+                        onPressed: () {
+                          setState(() {
+                            _obscureConfirmPassword = !_obscureConfirmPassword;
+                          });
+                        },
                       ),
                     ),
+                    validator: _validateConfirmPassword,
                   ),
                   const SizedBox(height: 32),
-                  // Sign In Button
                   BlocBuilder<AuthBloc, AuthState>(
                     builder: (context, state) {
                       final isLoading = state.maybeWhen(
                         loading: () => true,
                         orElse: () => false,
                       );
-
                       return SizedBox(
                         width: double.infinity,
                         height: 56,
@@ -285,7 +248,8 @@ class _LoginPageState extends State<LoginPage> {
                               : () {
                                   if (_formKey.currentState!.validate()) {
                                     context.read<AuthBloc>().add(
-                                          AuthEvent.login(
+                                          AuthEvent.register(
+                                            _nameController.text.trim(),
                                             _phoneController.text,
                                             _passwordController.text,
                                           ),
@@ -305,12 +269,13 @@ class _LoginPageState extends State<LoginPage> {
                                   height: 20,
                                   child: CircularProgressIndicator(
                                     strokeWidth: 2,
-                                    valueColor:
-                                        AlwaysStoppedAnimation<Color>(Colors.white),
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.white,
+                                    ),
                                   ),
                                 )
                               : Text(
-                                  l10n.signIn,
+                                  l10n.signUp,
                                   style: const TextStyle(
                                     color: Colors.white,
                                     fontSize: 18,
@@ -327,7 +292,7 @@ class _LoginPageState extends State<LoginPage> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        l10n.dontHaveAccount,
+                        l10n.alreadyHaveAccount,
                         style: const TextStyle(
                           fontSize: 14,
                           color: Color(0xFF757575),
@@ -335,14 +300,14 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                       TextButton(
                         onPressed: () {
-                          Navigator.of(context).push(
+                          Navigator.of(context).pushReplacement(
                             MaterialPageRoute(
-                              builder: (context) => const RegistrationPage(),
+                              builder: (context) => const LoginPage(),
                             ),
                           );
                         },
                         child: Text(
-                          l10n.registerLink,
+                          l10n.signInLink,
                           style: const TextStyle(
                             color: Color(0xFF7BB5C9),
                             fontSize: 14,
@@ -352,12 +317,23 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 40),
+                  const SizedBox(height: 24),
                 ],
               ),
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildLabel(String text) {
+    return Text(
+      text,
+      style: const TextStyle(
+        fontSize: 16,
+        fontWeight: FontWeight.w600,
+        color: Color(0xFF2D2D2D),
       ),
     );
   }

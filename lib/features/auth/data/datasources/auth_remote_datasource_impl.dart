@@ -7,12 +7,29 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     // TODO: Implement actual API call
     // For now, simulate a successful login
     await Future.delayed(const Duration(seconds: 1));
-    
+
     // Simulate API response
     return {
       'id': 'user_123',
       'phoneNumber': phoneNumber,
       'name': 'User Name',
+      'email': null,
+    };
+  }
+
+  @override
+  Future<Map<String, dynamic>> register(
+    String name,
+    String phoneNumber,
+    String password,
+  ) async {
+    // TODO: Implement actual API call
+    await Future.delayed(const Duration(seconds: 1));
+
+    return {
+      'id': 'user_${DateTime.now().millisecondsSinceEpoch}',
+      'phoneNumber': phoneNumber,
+      'name': name,
       'email': null,
     };
   }

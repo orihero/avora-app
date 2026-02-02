@@ -18,6 +18,19 @@ abstract class AppLocalizations {
   String get passwordHint;
   String get forgotPassword;
   String get signIn;
+  String get alreadyHaveAccount;
+  String get registerLink;
+
+  // Registration Screen
+  String get registerTitle;
+  String get registerSubtitle;
+  String get nameLabel;
+  String get nameHint;
+  String get confirmPasswordLabel;
+  String get confirmPasswordHint;
+  String get signUp;
+  String get dontHaveAccount;
+  String get signInLink;
 
   // Onboarding
   String get skip;

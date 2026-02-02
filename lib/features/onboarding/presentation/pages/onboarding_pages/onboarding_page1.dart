@@ -87,18 +87,7 @@ class _OnboardingPage1State extends State<OnboardingPage1>
       curve: Curves.easeOut,
     ));
 
-    // Start animations after a short delay to ensure WebView is ready
-    Future.delayed(const Duration(milliseconds: 300), () {
-      if (mounted) {
-        _modelAnimationController.forward();
-        // Start text animation slightly after model animation
-        Future.delayed(const Duration(milliseconds: 500), () {
-          if (mounted) {
-            _textAnimationController.forward();
-          }
-        });
-      }
-    });
+    // Model and text animations are started when model is loaded (in _injectModel)
   }
 
   void _initializeWebView() {
@@ -148,7 +137,7 @@ class _OnboardingPage1State extends State<OnboardingPage1>
     }
     // Set initial rotation to match slider center position (0.5 = 180 degrees)
     final double initialRotation = _rotationValue * 360;
-    
+
     _controller.runJavaScript('''
       (function() {
         const viewer = document.querySelector('model-viewer');
@@ -161,10 +150,21 @@ class _OnboardingPage1State extends State<OnboardingPage1>
         }
       })();
     ''');
-    
+
     if (mounted) {
       setState(() {
         _modelLoaded = true;
+      });
+      // Start model and text animations after model is loaded and rendered
+      Future.delayed(const Duration(milliseconds: 300), () {
+        if (mounted) {
+          _modelAnimationController.forward();
+          Future.delayed(const Duration(milliseconds: 500), () {
+            if (mounted) {
+              _textAnimationController.forward();
+            }
+          });
+        }
       });
     }
   }
@@ -266,30 +266,36 @@ class _OnboardingPage1State extends State<OnboardingPage1>
       child: SafeArea(
         child: Column(
           children: [
-            // Top section: 3D model viewer with animation
+            // Top section: 3D model viewer - show loading until model is loaded
             Expanded(
               flex: 5,
-              child: AnimatedBuilder(
-                animation: _modelAnimationController,
-                builder: (context, child) {
-                  return ClipRect(
-                    child: Transform.translate(
-                      offset: Offset(
-                        _slideAnimation.value * screenWidth,
-                        0,
-                      ),
-                      child: Transform.rotate(
-                        angle: _rotateAnimation.value * 1.0, // More rotation
-                        child: SizedBox(
-                          width: double.infinity,
-                          height: double.infinity,
-                          child: WebViewWidget(controller: _controller),
-                        ),
+              child: _modelLoaded
+                  ? AnimatedBuilder(
+                      animation: _modelAnimationController,
+                      builder: (context, child) {
+                        return ClipRect(
+                          child: Transform.translate(
+                            offset: Offset(
+                              _slideAnimation.value * screenWidth,
+                              0,
+                            ),
+                            child: Transform.rotate(
+                              angle: _rotateAnimation.value * 1.0,
+                              child: SizedBox(
+                                width: double.infinity,
+                                height: double.infinity,
+                                child: WebViewWidget(controller: _controller),
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    )
+                  : const Center(
+                      child: CircularProgressIndicator(
+                        color: Color(0xFF7BB5C9),
                       ),
                     ),
-                  );
-                },
-              ),
             ),
             // Middle section: Slider, text, and progress dots
             Expanded(

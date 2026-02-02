@@ -24,6 +24,7 @@ import '../../features/auth/data/datasources/auth_local_datasource_impl.dart';
 import '../../features/auth/data/repositories/auth_repository_impl.dart';
 import '../../features/auth/domain/repositories/auth_repository.dart';
 import '../../features/auth/domain/usecases/login_usecase.dart';
+import '../../features/auth/domain/usecases/register_usecase.dart';
 import '../../features/auth/domain/usecases/get_current_user_usecase.dart';
 import '../../features/auth/presentation/bloc/auth_bloc.dart';
 
@@ -116,12 +117,14 @@ Future<void> init() async {
 
   // Use cases
   getIt.registerLazySingleton(() => LoginUseCase(getIt()));
+  getIt.registerLazySingleton(() => RegisterUseCase(getIt()));
   getIt.registerLazySingleton(() => GetCurrentUserUseCase(getIt()));
 
   // Bloc
   getIt.registerFactory(
     () => AuthBloc(
       loginUseCase: getIt(),
+      registerUseCase: getIt(),
       getCurrentUserUseCase: getIt(),
     ),
   );

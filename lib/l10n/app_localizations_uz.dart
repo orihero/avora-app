@@ -26,6 +26,40 @@ class AppLocalizationsUz extends AppLocalizations {
   @override
   String get signIn => 'Kirish';
 
+  @override
+  String get alreadyHaveAccount => 'Hisobingiz bormi?';
+
+  @override
+  String get registerLink => "Ro'yxatdan o'tish";
+
+  // Registration Screen
+  @override
+  String get registerTitle => "Hisob yarating";
+
+  @override
+  String get registerSubtitle => "Boshlash uchun ma'lumotlaringizni kiriting";
+
+  @override
+  String get nameLabel => "To'liq ism";
+
+  @override
+  String get nameHint => "To'liq ismingizni kiriting";
+
+  @override
+  String get confirmPasswordLabel => "Parolni tasdiqlang";
+
+  @override
+  String get confirmPasswordHint => "Parolingizni qayta kiriting";
+
+  @override
+  String get signUp => "Ro'yxatdan o'tish";
+
+  @override
+  String get dontHaveAccount => "Hisobingiz yo'qmi?";
+
+  @override
+  String get signInLink => 'Kirish';
+
   // Onboarding
   @override
   String get skip => 'O\'tkazib yuborish';

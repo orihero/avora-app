@@ -26,6 +26,40 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get signIn => 'Войти';
 
+  @override
+  String get alreadyHaveAccount => 'Уже есть аккаунт?';
+
+  @override
+  String get registerLink => 'Регистрация';
+
+  // Registration Screen
+  @override
+  String get registerTitle => 'Создать аккаунт';
+
+  @override
+  String get registerSubtitle => 'Заполните данные для начала';
+
+  @override
+  String get nameLabel => 'Полное имя';
+
+  @override
+  String get nameHint => 'Введите ваше полное имя';
+
+  @override
+  String get confirmPasswordLabel => 'Подтвердите пароль';
+
+  @override
+  String get confirmPasswordHint => 'Повторите пароль';
+
+  @override
+  String get signUp => 'Зарегистрироваться';
+
+  @override
+  String get dontHaveAccount => 'Нет аккаунта?';
+
+  @override
+  String get signInLink => 'Войти';
+
   // Onboarding
   @override
   String get skip => 'Пропустить';

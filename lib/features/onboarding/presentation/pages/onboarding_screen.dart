@@ -71,16 +71,8 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     super.dispose();
   }
 
-  void _onPageChanged(int page) {
-    context.read<OnboardingBloc>().add(OnboardingEvent.pageChanged(page));
-  }
-
-  void _nextPage() {
-    context.read<OnboardingBloc>().add(const OnboardingEvent.nextPage());
-  }
-
-  void _skipOnboarding() {
-    context.read<OnboardingBloc>().add(const OnboardingEvent.skipOnboarding());
+  void _onPageChanged(int page, OnboardingBloc bloc) {
+    bloc.add(OnboardingEvent.pageChanged(page));
   }
 
   void _navigateToLogin() {
@@ -113,6 +105,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
         },
         child: BlocBuilder<OnboardingBloc, OnboardingState>(
           builder: (context, state) {
+            final bloc = context.read<OnboardingBloc>();
             final currentPage = state.maybeWhen(
               pageChanged: (page) => page,
               orElse: () => 0,
@@ -124,7 +117,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                 children: [
                   PageView(
                     controller: _pageController,
-                    onPageChanged: _onPageChanged,
+                    onPageChanged: (page) => _onPageChanged(page, bloc),
                     children: const [
                       OnboardingPage1(),
                       OnboardingPage2(),
@@ -142,9 +135,9 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                             position: _nextSlideAnimation,
                             child: GestureDetector(
                               onTap: () {
-                                context.read<OnboardingBloc>().add(
-                                      const OnboardingEvent.completeOnboarding(),
-                                    );
+                                bloc.add(
+                                  const OnboardingEvent.completeOnboarding(),
+                                );
                               },
                               child: Container(
                                 width: double.infinity,
@@ -182,7 +175,11 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                               SlideTransition(
                                 position: _skipSlideAnimation,
                                 child: TextButton(
-                                  onPressed: _skipOnboarding,
+                                  onPressed: () {
+                                    bloc.add(
+                                      const OnboardingEvent.skipOnboarding(),
+                                    );
+                                  },
                                   child: Text(
                                     l10n.skip,
                                     style: const TextStyle(
@@ -197,7 +194,11 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                               SlideTransition(
                                 position: _nextSlideAnimation,
                                 child: GestureDetector(
-                                  onTap: _nextPage,
+                                  onTap: () {
+                                    bloc.add(
+                                      const OnboardingEvent.nextPage(),
+                                    );
+                                  },
                                   child: Container(
                                     width: 56,
                                     height: 56,

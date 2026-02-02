@@ -29,28 +29,28 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Avora - 3D Furniture Viewer',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
-      ),
-      locale: const Locale('ru'), // Russian as default
-      supportedLocales: const [
-        Locale('ru'), // Russian
-        Locale('uz'), // Uzbek
-        Locale('en'), // English
-      ],
-      localizationsDelegates: const [
-        AppLocalizationsDelegate(),
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
-      home: BlocProvider(
-        create: (context) =>
-            di.getIt<AuthBloc>()..add(const AuthEvent.checkAuthStatus()),
-        child: const OnboardingScreen(),
+    return BlocProvider(
+      create: (context) =>
+          di.getIt<AuthBloc>()..add(const AuthEvent.checkAuthStatus()),
+      child: MaterialApp(
+        title: 'Avora - 3D Furniture Viewer',
+        theme: ThemeData(
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+          useMaterial3: true,
+        ),
+        locale: const Locale('ru'), // Russian as default
+        supportedLocales: const [
+          Locale('ru'), // Russian
+          Locale('uz'), // Uzbek
+          Locale('en'), // English
+        ],
+        localizationsDelegates: const [
+          AppLocalizationsDelegate(),
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        home: const OnboardingScreen(),
       ),
     );
   }
