@@ -1,14 +1,23 @@
 import 'package:dartz/dartz.dart';
 import '../../../../core/error/failures.dart';
-import '../entities/user.dart';
 
+/// Repository interface for authentication operations (Appwrite).
 abstract class AuthRepository {
-  Future<Either<Failure, User>> login(String phoneNumber, String password);
-  Future<Either<Failure, User>> register(
-    String name,
-    String phoneNumber,
-    String password,
-  );
-  Future<Either<Failure, void>> logout();
-  Future<Either<Failure, User?>> getCurrentUser();
+  /// Sign up with name, E.164 phone, and password.
+  /// Phone is converted to a synthetic email for Appwrite email/password auth.
+  Future<Either<Failure, void>> signUp({
+    required String name,
+    required String phone,
+    required String password,
+  });
+
+  /// Log in with E.164 phone and password.
+  /// Phone is converted to a synthetic email for Appwrite email/password auth.
+  Future<Either<Failure, void>> login({
+    required String phone,
+    required String password,
+  });
+
+  /// Returns true if the current client has a valid session.
+  Future<Either<Failure, bool>> isLoggedIn();
 }

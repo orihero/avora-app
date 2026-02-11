@@ -1,15 +1,28 @@
-import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:equatable/equatable.dart';
 
-part 'auth_event.freezed.dart';
+abstract class AuthEvent extends Equatable {
+  const AuthEvent();
 
-@freezed
-class AuthEvent with _$AuthEvent {
-  const factory AuthEvent.login(String phoneNumber, String password) = _Login;
-  const factory AuthEvent.register(
-    String name,
-    String phoneNumber,
-    String password,
-  ) = _Register;
-  const factory AuthEvent.logout() = _Logout;
-  const factory AuthEvent.checkAuthStatus() = _CheckAuthStatus;
+  const factory AuthEvent.checkRequested() = _AuthCheckRequested;
+  const factory AuthEvent.justLoggedIn() = _AuthJustLoggedIn;
+
+  @override
+  List<Object?> get props => [];
+
+  T when<T>({
+    required T Function() checkRequested,
+    required T Function() justLoggedIn,
+  }) {
+    if (this is _AuthCheckRequested) return checkRequested();
+    if (this is _AuthJustLoggedIn) return justLoggedIn();
+    throw StateError('Unknown AuthEvent: $this');
+  }
+}
+
+class _AuthCheckRequested extends AuthEvent {
+  const _AuthCheckRequested();
+}
+
+class _AuthJustLoggedIn extends AuthEvent {
+  const _AuthJustLoggedIn();
 }

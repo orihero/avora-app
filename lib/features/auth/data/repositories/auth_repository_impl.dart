@@ -1,92 +1,61 @@
 import 'package:dartz/dartz.dart';
 import '../../../../core/error/failures.dart';
 import '../../../../core/error/exceptions.dart';
-import '../../../../core/network/network_info.dart';
-import '../../domain/entities/user.dart';
+import '../../../../core/utils/phone_to_email.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../datasources/auth_remote_datasource.dart';
-import '../datasources/auth_local_datasource.dart';
-import '../models/user_model.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
   final AuthRemoteDataSource remoteDataSource;
-  final AuthLocalDataSource localDataSource;
-  final NetworkInfo networkInfo;
 
-  AuthRepositoryImpl({
-    required this.remoteDataSource,
-    required this.localDataSource,
-    required this.networkInfo,
-  });
+  AuthRepositoryImpl({required this.remoteDataSource});
 
   @override
-  Future<Either<Failure, User>> login(String phoneNumber, String password) async {
-    if (await networkInfo.isConnected) {
-      try {
-        final userJson = await remoteDataSource.login(phoneNumber, password);
-        await localDataSource.cacheUser(userJson);
-        final user = UserModel.fromJson(userJson);
-        return Right(user);
-      } on ServerException catch (e) {
-        return Left(ServerFailure(e.message));
-      } on CacheException catch (e) {
-        return Left(CacheFailure(e.message));
-      }
-    } else {
-      return const Left(NetworkFailure('No internet connection'));
-    }
-  }
-
-  @override
-  Future<Either<Failure, User>> register(
-    String name,
-    String phoneNumber,
-    String password,
-  ) async {
-    if (await networkInfo.isConnected) {
-      try {
-        final userJson = await remoteDataSource.register(
-          name,
-          phoneNumber,
-          password,
-        );
-        await localDataSource.cacheUser(userJson);
-        final user = UserModel.fromJson(userJson);
-        return Right(user);
-      } on ServerException catch (e) {
-        return Left(ServerFailure(e.message));
-      } on CacheException catch (e) {
-        return Left(CacheFailure(e.message));
-      }
-    } else {
-      return const Left(NetworkFailure('No internet connection'));
-    }
-  }
-
-  @override
-  Future<Either<Failure, void>> logout() async {
+  Future<Either<Failure, void>> signUp({
+    required String name,
+    required String phone,
+    required String password,
+  }) async {
     try {
-      await remoteDataSource.logout();
-      await localDataSource.clearCache();
+      final email = phoneToSyntheticEmail(phone);
+      await remoteDataSource.signUp(
+        email: email,
+        password: password,
+        name: name.isNotEmpty ? name : null,
+      );
       return const Right(null);
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
-    } on CacheException catch (e) {
-      return Left(CacheFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure('Sign up failed: ${e.toString()}'));
     }
   }
 
   @override
-  Future<Either<Failure, User?>> getCurrentUser() async {
+  Future<Either<Failure, void>> login({
+    required String phone,
+    required String password,
+  }) async {
     try {
-      final cachedUser = await localDataSource.getCachedUser();
-      if (cachedUser != null) {
-        final user = UserModel.fromJson(cachedUser);
-        return Right(user);
-      }
+      final email = phoneToSyntheticEmail(phone);
+      await remoteDataSource.login(email: email, password: password);
       return const Right(null);
-    } on CacheException catch (e) {
-      return Left(CacheFailure(e.message));
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure('Login failed: ${e.toString()}'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, bool>> isLoggedIn() async {
+    try {
+      final hasSession = await remoteDataSource.hasSession();
+      return Right(hasSession);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure('Auth check failed: ${e.toString()}'));
     }
   }
 }

@@ -1,14 +1,30 @@
-import 'package:freezed_annotation/freezed_annotation.dart';
-import '../../domain/entities/user.dart';
-import '../../../../core/error/failures.dart';
+import 'package:equatable/equatable.dart';
 
-part 'auth_state.freezed.dart';
+abstract class AuthState extends Equatable {
+  const AuthState();
 
-@freezed
-class AuthState with _$AuthState {
-  const factory AuthState.initial() = _Initial;
-  const factory AuthState.loading() = _Loading;
-  const factory AuthState.authenticated(User user) = _Authenticated;
-  const factory AuthState.unauthenticated() = _Unauthenticated;
-  const factory AuthState.error(Failure failure) = _Error;
+  const factory AuthState.initial() = _AuthInitial;
+  const factory AuthState.authenticated() = _AuthAuthenticated;
+  const factory AuthState.unauthenticated() = _AuthUnauthenticated;
+
+  /// True when the user has a valid session.
+  bool get isAuthenticated => this is _AuthAuthenticated;
+
+  /// True while auth check is in progress (before first emission).
+  bool get isInitial => this is _AuthInitial;
+
+  @override
+  List<Object?> get props => [];
+}
+
+class _AuthInitial extends AuthState {
+  const _AuthInitial();
+}
+
+class _AuthAuthenticated extends AuthState {
+  const _AuthAuthenticated();
+}
+
+class _AuthUnauthenticated extends AuthState {
+  const _AuthUnauthenticated();
 }

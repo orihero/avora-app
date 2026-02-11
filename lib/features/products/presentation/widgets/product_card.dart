@@ -16,8 +16,14 @@ class ProductCard extends StatelessWidget {
   /// Convert hex string to Color
   Color _hexToColor(String hexString) {
     final buffer = StringBuffer();
-    if (hexString.length == 6 || hexString.length == 7) buffer.write('ff');
-    buffer.write(hexString.replaceFirst('#', ''));
+    // Remove common prefixes: #, 0x, 0X
+    String cleanedHex = hexString
+        .replaceFirst(RegExp(r'^#'), '')
+        .replaceFirst(RegExp(r'^0[xX]'), '');
+    
+    // If it's 6 characters (RGB), add alpha channel (FF)
+    if (cleanedHex.length == 6) buffer.write('ff');
+    buffer.write(cleanedHex);
     return Color(int.parse(buffer.toString(), radix: 16));
   }
 

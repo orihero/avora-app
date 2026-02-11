@@ -55,18 +55,16 @@ class _OnboardingPage3State extends State<OnboardingPage3>
   }
 
   void _setupAnimations() {
-    // Scroll animation with deceleration effect
-    // Using a longer duration and custom curve for natural deceleration
+    // Infinite scroll animation - using linear curve and repeat for continuous looping
     _scrollAnimationController = AnimationController(
-      duration: const Duration(milliseconds: 3500), // 3.5 seconds for smooth deceleration
+      duration: const Duration(milliseconds: 10000), // 10 seconds for one full cycle
       vsync: this,
     );
 
-    // Animation goes from 0 to 1, we'll use this to calculate scroll offset
-    // Using Curves.easeOutCubic for a nice deceleration feel that slows down naturally
+    // Linear animation that repeats infinitely
     _scrollAnimation = CurvedAnimation(
       parent: _scrollAnimationController,
-      curve: Curves.easeOutCubic, // Strong deceleration at the end
+      curve: Curves.linear, // Linear for smooth infinite scrolling
     );
 
     // Text animation - fade and scale
@@ -94,7 +92,8 @@ class _OnboardingPage3State extends State<OnboardingPage3>
     // Start animations after a short delay
     Future.delayed(const Duration(milliseconds: 300), () {
       if (mounted) {
-        _scrollAnimationController.forward();
+        // Start infinite scrolling immediately
+        _scrollAnimationController.repeat();
         // Start text animation after scroll has started
         Future.delayed(const Duration(milliseconds: 1200), () {
           if (mounted) {
@@ -221,9 +220,11 @@ class _OnboardingPage3State extends State<OnboardingPage3>
   }
 
   Widget _buildImageGrid() {
-    // Total scroll distance (how much the columns move)
-    const double maxScrollDistance = 120.0;
-    final scrollOffset = _scrollAnimation.value * maxScrollDistance;
+    // Calculate cycle height for infinite scrolling.
+    // Each card is 150px height + 10px spacing = 160px per item.
+    const double itemHeight = 150.0;
+    const double itemSpacing = 10.0;
+    const double itemExtent = itemHeight + itemSpacing;
 
     return Stack(
       children: [
@@ -237,9 +238,11 @@ class _OnboardingPage3State extends State<OnboardingPage3>
               Expanded(
                 child: _buildScrollingColumn(
                   images: _columnImages[0],
-                  scrollOffset: scrollOffset,
+                  animationValue: _scrollAnimation.value,
                   scrollDown: true,
                   initialOffset: 0,
+                  itemExtent: itemExtent,
+                  speedFactor: 0.9,
                 ),
               ),
               const SizedBox(width: 10),
@@ -247,9 +250,11 @@ class _OnboardingPage3State extends State<OnboardingPage3>
               Expanded(
                 child: _buildScrollingColumn(
                   images: _columnImages[1],
-                  scrollOffset: scrollOffset,
+                  animationValue: _scrollAnimation.value,
                   scrollDown: false,
                   initialOffset: -60, // Start higher to scroll down into view
+                  itemExtent: itemExtent,
+                  speedFactor: 1.1,
                 ),
               ),
               const SizedBox(width: 10),
@@ -257,9 +262,11 @@ class _OnboardingPage3State extends State<OnboardingPage3>
               Expanded(
                 child: _buildScrollingColumn(
                   images: _columnImages[2],
-                  scrollOffset: scrollOffset,
+                  animationValue: _scrollAnimation.value,
                   scrollDown: true,
                   initialOffset: -30, // Slight offset for visual variety
+                  itemExtent: itemExtent,
+                  speedFactor: 1.0,
                 ),
               ),
             ],
@@ -317,14 +324,33 @@ class _OnboardingPage3State extends State<OnboardingPage3>
 
   Widget _buildScrollingColumn({
     required List<String> images,
-    required double scrollOffset,
+    required double animationValue,
     required bool scrollDown,
     required double initialOffset,
+    required double itemExtent,
+    required double speedFactor,
   }) {
-    // Calculate the transform offset based on scroll direction
-    final offset = scrollDown 
-        ? initialOffset + scrollOffset 
-        : initialOffset - scrollOffset;
+    // Duplicate images to create seamless loop
+    final duplicatedImages = [...images, ...images];
+
+    // Height of one logical cycle (one set of images).
+    final double cycleHeight = itemExtent * images.length;
+
+    // Base scroll distance for one logical cycle, scaled by speedFactor.
+    final double rawScroll = (animationValue * cycleHeight * speedFactor) % cycleHeight;
+
+    // For downward scrolling, move content up (negative offset),
+    // for upward scrolling, move content down (positive offset).
+    double offset = scrollDown ? -rawScroll : rawScroll;
+
+    // Apply initial visual offset.
+    offset += initialOffset;
+
+    // Keep offset within [-cycleHeight, 0] for stable, seamless looping.
+    offset = offset % cycleHeight;
+    if (offset > 0) {
+      offset -= cycleHeight;
+    }
 
     return ClipRect(
       child: OverflowBox(
@@ -334,7 +360,7 @@ class _OnboardingPage3State extends State<OnboardingPage3>
           offset: Offset(0, offset),
           child: Column(
             mainAxisSize: MainAxisSize.min,
-            children: images.map((imageUrl) {
+            children: duplicatedImages.map((imageUrl) {
               return Padding(
                 padding: const EdgeInsets.only(bottom: 10.0),
                 child: _buildImageCard(imageUrl),

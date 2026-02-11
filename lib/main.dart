@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:liquid_tabbar_minimize/liquid_tabbar_minimize.dart';
 
 import 'core/di/injection_container.dart' as di;
 import 'features/auth/presentation/bloc/auth_bloc.dart';
 import 'features/auth/presentation/bloc/auth_event.dart';
 import 'features/model_viewer/presentation/bloc/model_viewer_bloc.dart';
 import 'features/model_viewer/presentation/bloc/model_viewer_event.dart';
-import 'features/onboarding/presentation/pages/onboarding_screen.dart';
+import 'features/auth/presentation/widgets/auth_initial_route.dart';
 import 'l10n/l10n.dart';
 
 void main() async {
@@ -29,11 +30,12 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
+    return BlocProvider<AuthBloc>(
       create: (context) =>
-          di.getIt<AuthBloc>()..add(const AuthEvent.checkAuthStatus()),
+          di.getIt<AuthBloc>()..add(const AuthEvent.checkRequested()),
       child: MaterialApp(
         title: 'Avora - 3D Furniture Viewer',
+        navigatorObservers: [LiquidRouteObserver.instance],
         theme: ThemeData(
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
           useMaterial3: true,
@@ -50,23 +52,8 @@ class MainApp extends StatelessWidget {
           GlobalWidgetsLocalizations.delegate,
           GlobalCupertinoLocalizations.delegate,
         ],
-        home: const OnboardingScreen(),
+        home: const AuthInitialRoute(),
       ),
     );
-  }
-}
-
-/// Simple BlocObserver for logging (optional)
-class SimpleBlocObserver extends BlocObserver {
-  @override
-  void onChange(BlocBase bloc, Change change) {
-    super.onChange(bloc, change);
-    debugPrint('${bloc.runtimeType} $change');
-  }
-
-  @override
-  void onError(BlocBase bloc, Object error, StackTrace stackTrace) {
-    super.onError(bloc, error, stackTrace);
-    debugPrint('${bloc.runtimeType} $error');
   }
 }
