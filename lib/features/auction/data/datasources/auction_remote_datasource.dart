@@ -1,4 +1,3 @@
-import '../../../../core/error/exceptions.dart';
 import '../models/auction_model.dart';
 import '../models/auction_product_model.dart';
 import '../models/bid_model.dart';

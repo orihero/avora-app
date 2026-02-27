@@ -3,6 +3,7 @@ import '../../../../core/error/failures.dart';
 import '../../domain/entities/auction.dart';
 import '../../domain/entities/auction_product.dart';
 import '../../domain/entities/bid.dart';
+import '../../domain/entities/story_item.dart';
 import '../../domain/entities/winner_confirmation.dart';
 
 /// States for AuctionHubBloc.
@@ -23,12 +24,16 @@ class AuctionStateLoading extends AuctionState {
 class AuctionStateNoAuction extends AuctionState {
   final String? promoVideoUrl;
   final String? promoVideoThumbnailUrl;
+  final String? storyThumbnail;
+  final List<StoryItem>? stories;
   const AuctionStateNoAuction({
     this.promoVideoUrl,
     this.promoVideoThumbnailUrl,
+    this.storyThumbnail,
+    this.stories,
   });
   @override
-  List<Object?> get props => [promoVideoUrl, promoVideoThumbnailUrl];
+  List<Object?> get props => [promoVideoUrl, promoVideoThumbnailUrl, storyThumbnail, stories];
 }
 
 class AuctionStateHasAuction extends AuctionState {

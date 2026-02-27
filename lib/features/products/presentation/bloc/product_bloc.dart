@@ -3,8 +3,6 @@ import '../../domain/usecases/get_products.dart';
 import '../../domain/usecases/get_products_by_category.dart';
 import 'product_event.dart';
 import 'product_state.dart';
-import '../../domain/usecases/get_products.dart' show NoParams;
-import '../../domain/usecases/get_products_by_category.dart' show CategoryParams;
 
 class ProductBloc extends Bloc<ProductEvent, ProductState> {
   final GetProducts getProducts;

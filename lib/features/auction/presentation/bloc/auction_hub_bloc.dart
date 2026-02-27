@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../data/models/story_item_model.dart';
 import '../../domain/usecases/get_auction_products.dart';
 import '../../domain/usecases/get_auction_variable.dart';
 import '../../domain/usecases/get_bids_for_product.dart';
@@ -112,6 +113,23 @@ class AuctionHubBloc extends Bloc<AuctionEvent, AuctionState> {
       (v) => v.isEmpty ? null : v,
     );
 
+    final storyThumbnailResult = await getAuctionVariable(
+      const GetAuctionVariableParams(key: 'auction_story_thumbnail_url'),
+    );
+    final String? storyThumbnail = storyThumbnailResult.fold(
+      (_) => null,
+      (v) => v.isEmpty ? null : v,
+    );
+
+    final storiesResult = await getAuctionVariable(
+      const GetAuctionVariableParams(key: 'auction_stories'),
+    );
+    final String storiesJson = storiesResult.fold(
+      (_) => '',
+      (v) => v,
+    );
+    final stories = StoryItemModel.parseStoriesJson(storiesJson);
+
     final auctionResult = await getFeaturedAuction(NoParams());
     await auctionResult.fold(
       (failure) async => emit(AuctionStateError(failure)),
@@ -120,6 +138,8 @@ class AuctionHubBloc extends Bloc<AuctionEvent, AuctionState> {
           emit(AuctionStateNoAuction(
             promoVideoUrl: promoVideoUrl,
             promoVideoThumbnailUrl: promoVideoThumbnailUrl,
+            storyThumbnail: storyThumbnail,
+            stories: stories.isNotEmpty ? stories : null,
           ));
           return;
         }

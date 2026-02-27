@@ -1,6 +1,7 @@
 import 'package:appwrite/appwrite.dart';
 import '../../../../core/error/exceptions.dart';
 import '../../../../core/network/appwrite_config.dart';
+import '../../../../core/utils/phone_to_email.dart';
 import 'auth_remote_datasource.dart';
 
 /// Appwrite implementation of auth remote data source.
@@ -9,12 +10,15 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   final Client client;
   final Account account;
   final AppwriteConfig config;
+  late final Databases _databases;
 
   AuthRemoteDataSourceImpl({
     required this.client,
     required this.account,
     required this.config,
-  });
+  }) {
+    _databases = Databases(client);
+  }
 
   void _ensureConfigured() {
     if (!config.isConfigured) {
@@ -50,6 +54,8 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         password: password,
         failureLabel: 'Sign up failed',
       );
+      // Ensure user profile exists in database
+      await _ensureUserProfileExists();
     } on AppwriteException catch (e) {
       throw ServerException(e.message ?? 'Sign up failed');
     }
@@ -85,6 +91,73 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     }
   }
 
+  /// Ensures user profile exists in user_profiles collection.
+  /// Creates profile if it doesn't exist, updates if it does.
+  /// This method is safe to call multiple times and won't fail the auth flow if it errors.
+  Future<void> _ensureUserProfileExists() async {
+    if (!config.isConfigured || config.userProfilesCollectionId.isEmpty) {
+      return; // Silently skip if not configured
+    }
+
+    try {
+      // Get current user info
+      final user = await account.get();
+      final userId = user.$id;
+      final userEmail = user.email;
+      final userName = user.name;
+      final phoneNumber = syntheticEmailToPhone(userEmail);
+
+      // Check if profile already exists
+      try {
+        final existingProfiles = await _databases.listDocuments(
+          databaseId: config.databaseId,
+          collectionId: config.userProfilesCollectionId,
+          queries: [
+            Query.equal('authId', userId),
+          ],
+        );
+
+        if (existingProfiles.documents.isNotEmpty) {
+          // Profile exists, update it if needed
+          final profileId = existingProfiles.documents.first.$id;
+          final updateData = <String, dynamic>{
+            'phoneNumber': phoneNumber,
+          };
+          if (userName.isNotEmpty) {
+            updateData['name'] = userName;
+          }
+          await _databases.updateDocument(
+            databaseId: config.databaseId,
+            collectionId: config.userProfilesCollectionId,
+            documentId: profileId,
+            data: updateData,
+          );
+        } else {
+          // Profile doesn't exist, create it
+          final createData = <String, dynamic>{
+            'authId': userId,
+            'phoneNumber': phoneNumber,
+            'role': 'user',
+            'name': userName,
+          };
+          await _databases.createDocument(
+            databaseId: config.databaseId,
+            collectionId: config.userProfilesCollectionId,
+            documentId: ID.unique(),
+            data: createData,
+          );
+        }
+      } on AppwriteException catch (e) {
+        // Log but don't fail - profile operations shouldn't block auth
+        // In production, you might want to log this to a monitoring service
+        print('Warning: Failed to ensure user profile exists: ${e.message}');
+      }
+    } catch (e) {
+      // Silently handle any errors - don't block authentication
+      print('Warning: Error ensuring user profile: ${e.toString()}');
+    }
+  }
+
   @override
   Future<void> login({
     required String email,
@@ -96,6 +169,8 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       password: password,
       failureLabel: 'Login failed',
     );
+    // Ensure user profile exists in database
+    await _ensureUserProfileExists();
   }
 
   @override

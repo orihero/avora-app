@@ -1,7 +1,6 @@
 import 'package:dartz/dartz.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/error/failures.dart';
-import '../../../../core/error/exceptions.dart';
 import '../../domain/repositories/onboarding_repository.dart';
 
 class OnboardingRepositoryImpl implements OnboardingRepository {

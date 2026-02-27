@@ -5,6 +5,7 @@ import '../../domain/entities/auction.dart';
 import '../../domain/entities/auction_product.dart';
 import '../../domain/entities/bid.dart';
 import '../../domain/entities/enums/auction_progress.dart';
+import '../../domain/entities/story_item.dart';
 import '../../domain/entities/winner_confirmation.dart';
 import '../bloc/auction_event.dart';
 import '../bloc/auction_hub_bloc.dart';
@@ -46,6 +47,8 @@ class _AuctionPageBody extends StatelessWidget {
             return _NoAuctionContent(
               promoVideoUrl: state.promoVideoUrl,
               promoVideoThumbnailUrl: state.promoVideoThumbnailUrl,
+              storyThumbnail: state.storyThumbnail,
+              stories: state.stories,
               onRefresh: () =>
                   context.read<AuctionHubBloc>().add(const AuctionEventRefresh()),
             );
@@ -97,11 +100,15 @@ class _AuctionPageBody extends StatelessWidget {
 class _NoAuctionContent extends StatelessWidget {
   final String? promoVideoUrl;
   final String? promoVideoThumbnailUrl;
+  final String? storyThumbnail;
+  final List<StoryItem>? stories;
   final VoidCallback onRefresh;
 
   const _NoAuctionContent({
     this.promoVideoUrl,
     this.promoVideoThumbnailUrl,
+    this.storyThumbnail,
+    this.stories,
     required this.onRefresh,
   });
 
@@ -110,12 +117,13 @@ class _NoAuctionContent extends StatelessWidget {
     return Column(
       children: [
         _NoAuctionHeader(
-          promoVideoUrl: promoVideoUrl,
+          storyThumbnail: storyThumbnail,
           promoVideoThumbnailUrl: promoVideoThumbnailUrl,
           onStoriesTap: () => AuctionStoriesView.open(
             context,
             promoVideoUrl: promoVideoUrl,
             promoVideoThumbnailUrl: promoVideoThumbnailUrl,
+            stories: stories,
           ),
           onInfoTap: () => AuctionInfoModal.show(context),
         ),
@@ -132,13 +140,13 @@ class _NoAuctionContent extends StatelessWidget {
 }
 
 class _NoAuctionHeader extends StatelessWidget {
-  final String? promoVideoUrl;
+  final String? storyThumbnail;
   final String? promoVideoThumbnailUrl;
   final VoidCallback onStoriesTap;
   final VoidCallback onInfoTap;
 
   const _NoAuctionHeader({
-    this.promoVideoUrl,
+    this.storyThumbnail,
     this.promoVideoThumbnailUrl,
     required this.onStoriesTap,
     required this.onInfoTap,
@@ -146,6 +154,11 @@ class _NoAuctionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Use storyThumbnail first, fallback to promoVideoThumbnailUrl
+    final thumbnailUrl = storyThumbnail?.isNotEmpty == true
+        ? storyThumbnail
+        : promoVideoThumbnailUrl;
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
       child: Row(
@@ -167,10 +180,9 @@ class _NoAuctionHeader extends StatelessWidget {
                 ],
               ),
               child: ClipOval(
-                child: promoVideoThumbnailUrl != null &&
-                        promoVideoThumbnailUrl!.isNotEmpty
+                child: thumbnailUrl != null && thumbnailUrl.isNotEmpty
                     ? Image.network(
-                        promoVideoThumbnailUrl!,
+                        thumbnailUrl,
                         fit: BoxFit.cover,
                         width: 56,
                         height: 56,

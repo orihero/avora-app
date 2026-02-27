@@ -1,6 +1,5 @@
 import 'package:dartz/dartz.dart';
 import '../../../../core/error/failures.dart';
-import '../entities/onboarding_state.dart';
 
 /// Repository interface for onboarding operations
 abstract class OnboardingRepository {

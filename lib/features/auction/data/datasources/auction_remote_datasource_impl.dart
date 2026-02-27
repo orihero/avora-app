@@ -53,7 +53,7 @@ class AuctionRemoteDataSourceImpl implements AuctionRemoteDataSource {
   Map<String, dynamic> _documentToMap(dynamic doc) {
     if (doc == null) return {};
     if (doc is Map<String, dynamic>) return Map<String, dynamic>.from(doc);
-    if (doc is Map) return Map<String, dynamic>.from(doc as Map);
+    if (doc is Map) return Map<String, dynamic>.from(doc);
     final d = doc as dynamic;
     final map = <String, dynamic>{
       '\$id': d.$id ?? d.id,
@@ -62,7 +62,7 @@ class AuctionRemoteDataSourceImpl implements AuctionRemoteDataSource {
     };
     final data = d.data;
     if (data is Map<String, dynamic>) map.addAll(data);
-    if (data is Map) map.addAll(Map<String, dynamic>.from(data as Map));
+    if (data is Map) map.addAll(Map<String, dynamic>.from(data));
     return map;
   }
 

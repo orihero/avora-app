@@ -2,7 +2,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/usecases/load_model_asset.dart';
 import 'model_viewer_event.dart';
 import 'model_viewer_state.dart';
-import '../../domain/usecases/load_model_asset.dart' show AssetPathParams;
 
 class ModelViewerBloc extends Bloc<ModelViewerEvent, ModelViewerState> {
   final LoadModelAsset loadModelAsset;
